@@ -7,8 +7,12 @@ on:
     branches: [ master ]
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: docker.io
   IMAGE_NAME: kreker3113/kubsu
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   test:
