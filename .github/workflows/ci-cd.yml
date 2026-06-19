@@ -8,7 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: kreker3113/KubSU
+  IMAGE_NAME: kreker3113/kubsu
 
 jobs:
   test:
