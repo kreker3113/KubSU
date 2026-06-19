@@ -1,4 +1,3 @@
-cat > .github/workflows/ci-cd.yml << 'EOF'
 name: CI/CD Pipeline
 
 on:
@@ -94,4 +93,3 @@ jobs:
             -e PORT=8000 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           ENDSSH
-EOF
