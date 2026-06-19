@@ -8,12 +8,11 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: kreker3113/KubSU
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     services:
       postgres:
         image: postgres:16-alpine
@@ -28,71 +27,61 @@ jobs:
           --health-retries 10
         ports:
           - 5432:5432
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Build test image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: Dockerfile.test
-        tags: test-runner:latest
-        load: true
-    
-    - name: Run tests
-      run: |
-        docker run --rm \
-          --network host \
-          -e DATABASE_URL=postgresql+psycopg://test:test@localhost:5432/test_db \
-          test-runner:latest
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build test image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile.test
+          tags: test-runner:latest
+          load: true
+      - name: Run tests
+        run: |
+          docker run --rm \
+            --network host \
+            -e DATABASE_URL=postgresql+psycopg://test:test@localhost:5432/test_db \
+            test-runner:latest
 
   build-and-deploy:
     needs: test
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Build and push
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        file: Dockerfile
-        push: true
-        tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-    
-    - name: Deploy to server
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USER: ${{ secrets.SSH_USER }}
-        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        DB_PASS: ${{ secrets.DB_PASSWORD }}
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-        
-        ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << ENDSSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Deploy to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DB_PASS: ${{ secrets.DB_PASSWORD }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'ENDSSH'
           podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           podman stop user-app 2>/dev/null || true
           podman rm user-app 2>/dev/null || true
@@ -103,4 +92,4 @@ jobs:
             -e DATABASE_URL=postgresql+psycopg://$SSH_USER:$DB_PASS@localhost:5432/users_db \
             -e PORT=8000 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-ENDSSH
+          ENDSSH
