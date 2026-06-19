@@ -83,8 +83,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
-          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $SSH_USER@$SSH_HOST << ENDSSH
           podman pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           podman stop user-app 2>/dev/null || true
           podman rm user-app 2>/dev/null || true
