@@ -1,3 +1,4 @@
+cat > .github/workflows/ci-cd.yml << 'EOF'
 name: CI/CD Pipeline
 
 on:
@@ -17,9 +18,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: test_db
+          POSTGRES_USER: kubsu
+          POSTGRES_PASSWORD: kubsu
+          POSTGRES_DB: kubsu
         options: >-
           --health-cmd pg_isready
           --health-interval 5s
@@ -43,7 +44,7 @@ jobs:
         run: |
           docker run --rm \
             --network host \
-            -e DATABASE_URL=postgresql+psycopg://test:test@localhost:5432/test_db \
+            -e DATABASE_URL=postgresql+psycopg://kubsu:kubsu@localhost:5432/kubsu \
             test-runner:latest
 
   build-and-deploy:
@@ -93,3 +94,4 @@ jobs:
             -e PORT=8000 \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           ENDSSH
+EOF
