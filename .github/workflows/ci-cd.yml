@@ -7,12 +7,8 @@ on:
     branches: [ master ]
 
 env:
-  REGISTRY: docker.io
-  IMAGE_NAME: kreker3113/kubsu
-
-permissions:
-  contents: read
-  packages: write
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   test:
@@ -54,6 +50,9 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
