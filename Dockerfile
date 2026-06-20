@@ -25,7 +25,9 @@ COPY --from=builder /root/.local /root/.local
 COPY --from=builder /build/src ./src/
 
 RUN addgroup --system --gid 1000 appgroup && \
-    adduser --system --uid 1000 --gid 1000 appuser
+    adduser --system --uid 1000 --gid 1000 appuser && \
+    chown -R appuser:appgroup /app && \
+    chmod -R 755 /root/.local/bin
 
 ENV PATH=/root/.local/bin:$PATH \
     PYTHONPATH=/app \
